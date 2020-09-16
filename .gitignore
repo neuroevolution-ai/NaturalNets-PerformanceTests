@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.idea/
+.pytest_cache/
+.mypy_cache/
+
+configurations/default.json
+
+checkpoints
+/results/
+/results/*
+results
+/results/data/2020-05-29_12-00-33/Configuration.json
+
+.dmypy.json
+.lock
+dask-worker-space/
