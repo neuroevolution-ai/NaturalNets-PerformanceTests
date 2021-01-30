@@ -2,4 +2,3 @@ numpy
 keras
 matplotlib
 tensorflow
-tensorflow-gpu

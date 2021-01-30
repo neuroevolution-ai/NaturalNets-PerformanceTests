@@ -7,6 +7,7 @@ def create_mlp():
 
     model = Sequential()
     model.add(Dense(16, input_dim=6, activation="relu"))
+    model.add(Dense(32, activation="relu"))
     model.add(Dense(16, activation="relu"))
     model.add(Dense(8, activation="relu"))
     model.add(Dense(1, activation="linear"))
@@ -33,7 +34,7 @@ preds2 = preds[:,0]
 diff = preds2 - testY
 perc = 100 - (preds2/testY)*100
 
-z1 = np.random.rand(1000000, 6)
+z1 = np.random.rand(3000000, 6)
 #z = model.predict(z1)
 
 start = time.time()

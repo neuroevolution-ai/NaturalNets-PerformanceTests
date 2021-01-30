@@ -25,7 +25,7 @@ def conv2d(out_r, out_c, kernel, kernel_size, out, input, data):
     return
 
 
-kernel_size = 5
+kernel_size = 3
 out_r = 64
 out_c = 64
 
@@ -37,10 +37,12 @@ data = list()
 
 conv2d(out_r, out_c, kernel, kernel_size, out, input, data)
 
+
 # Normalize data
 data_norm = list()
 for data_row in data:
     data_norm.append([data_row[0]/(out_r+kernel_size-2), data_row[1]/(out_c+kernel_size-2), data_row[2], (data_row[3]+1)/(out_r+kernel_size-2), (data_row[4]+1)/(out_c+kernel_size-2), data_row[5], data_row[6]])
+
 
 data_norm_np = np.asarray(data_norm)
 np.random.shuffle(data_norm_np)
@@ -58,15 +60,15 @@ np.save('trainY.npy', trainY)
 np.save('testX.npy', testX)
 np.save('testY.npy', testY)
 
-#fig = plt.figure()
-#ax = fig.gca(projection='3d')
+fig = plt.figure()
+ax = fig.gca(projection='3d')
 
-#colormap = cm.inferno
+colormap = cm.inferno
 
-#colors = output_labels_np
-#norm = Normalize()
-#norm.autoscale(colors)
+colors = output_labels_np
+norm = Normalize()
+norm.autoscale(colors)
 
-#ax.quiver(input_labels_np[:,0], input_labels_np[:,1], input_labels_np[:,2], input_labels_np[:,3]-input_labels_np[:,0], input_labels_np[:,4]-input_labels_np[:,1], input_labels_np[:,5]-input_labels_np[:,2], color=colormap(norm(output_labels_np)), linewidth=0.7, arrow_length_ratio=0)
+ax.quiver(input_labels_np[:,0], input_labels_np[:,1], input_labels_np[:,2], input_labels_np[:,3]-input_labels_np[:,0], input_labels_np[:,4]-input_labels_np[:,1], input_labels_np[:,5]-input_labels_np[:,2], color=colormap(norm(output_labels_np)), linewidth=0.7, arrow_length_ratio=0)
 
-#plt.show()
+plt.show()
