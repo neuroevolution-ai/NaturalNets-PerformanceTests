@@ -2,12 +2,12 @@ import numpy as np
 import time
 
 number_neuron_connections = 3000000
-u = np.random.rand(number_neuron_connections, 1, 6).astype('f')
-A = np.random.rand(6, 16).astype('f')
-B = np.random.rand(16, 16).astype('f')
-C = np.random.rand(16, 16).astype('f')
-D = np.random.rand(16, 8).astype('f')
-E = np.random.rand(8, 1).astype('f')
+u = np.random.rand(number_neuron_connections, 1, 6).astype('d')
+A = np.random.rand(6, 16).astype('d')
+B = np.random.rand(16, 32).astype('d')
+C = np.random.rand(32, 16).astype('d')
+D = np.random.rand(16, 8).astype('d')
+E = np.random.rand(8, 1).astype('d')
 
 
 def predict(u):
