@@ -35,11 +35,9 @@ diff = preds2 - testY
 perc = 100 - (preds2/testY)*100
 
 z1 = np.random.rand(3000000, 6)
-#z = model.predict(z1)
 
 start = time.time()
 
-#for i in range(1000):
 z = model.predict(z1)
 
 end = time.time()
