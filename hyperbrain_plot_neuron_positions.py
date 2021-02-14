@@ -23,10 +23,10 @@ def get_rgb_points(width, height):
     space_x = np.linspace(0, 1, width)
     space_y = np.linspace(0, 1, height)
 
-    meshgrid_x, meshgrid_y = np.meshgrid(space_x, space_y)
+    grid_x, grid_y = np.meshgrid(space_x, space_y)
 
-    x = meshgrid_x.flatten()
-    y = meshgrid_y.flatten()
+    x = grid_x.flatten()
+    y = grid_y.flatten()
 
     return x, y
 
