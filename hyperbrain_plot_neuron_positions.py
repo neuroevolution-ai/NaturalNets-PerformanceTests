@@ -8,7 +8,21 @@ import matplotlib.animation as animation
 matplotlib.use('Qt5Agg')
 
 
-def get_circle_points(n):
+def get_rgb_points(width, height, position_z):
+
+    space_x = np.linspace(0, 1, width)
+    space_y = np.linspace(0, 1, height)
+
+    grid_x, grid_y = np.meshgrid(space_x, space_y)
+
+    rgb_points_x = grid_x.flatten()
+    rgb_points_y = grid_y.flatten()
+    rgb_points_z = np.ones(width*height) * position_z
+
+    return np.column_stack((rgb_points_x, rgb_points_y, rgb_points_z))
+
+
+def get_circle_points(n, position_z):
 
     circle_x = np.zeros(n)
     circle_y = np.zeros(n)
@@ -18,17 +32,9 @@ def get_circle_points(n):
         circle_x[i] = 0.45*np.cos(t[i])+0.5
         circle_y[i] = 0.45*np.sin(t[i])+0.5
 
-    return circle_x, circle_y
+    circle_z = np.ones(n)*position_z
 
-
-def get_rgb_points(width, height):
-
-    space_x = np.linspace(0, 1, width)
-    space_y = np.linspace(0, 1, height)
-
-    grid_x, grid_y = np.meshgrid(space_x, space_y)
-
-    return grid_x.flatten(), grid_y.flatten()
+    return np.column_stack((circle_x, circle_y, circle_z))
 
 
 def get_rgb_from_observation(ob):
@@ -42,10 +48,14 @@ def get_rgb_from_observation(ob):
     return ob_red.flatten(), ob_green.flatten(), ob_blue.flatten()
 
 
+def split_coordinates(coordinates):
+
+    return coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
+
+
 def update_plot(i):
 
     obs, rew, done, info = env.step(env.action_space.sample())
-
     red, green, blue = get_rgb_from_observation(obs)
 
     print(i)
@@ -77,13 +87,15 @@ outputs_z = -1
 record_video = False
 
 # Inputs from rgb meshgrids
-rgb_x, rgb_y = get_rgb_points(input_image_width, input_image_height)
+inputs_red_positions = get_rgb_points(input_image_width, input_image_height, red_z)
+inputs_green_positions = get_rgb_points(input_image_width, input_image_height, green_z)
+inputs_blue_positions = get_rgb_points(input_image_width, input_image_height, blue_z)
 
 # CTRNN Neurons are randomly placed in a cube with length = 1
-neurons_x, neurons_y, neurons_z = np.random.random((3, number_neurons))
+neurons_positions = np.random.random((number_neurons, 3))
 
 # Outputs as a circle
-outputs_x, outputs_y = get_circle_points(number_outputs)
+outputs_positions = get_circle_points(number_outputs, outputs_z)
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -94,10 +106,20 @@ env = gym.make("procgen:procgen-heist-v0", distribution_mode="memory")
 obs_init = env.reset()
 red_init, green_init, blue_init = get_rgb_from_observation(obs_init)
 
+# Split all positions from 2D arrays to 1D vectors
+inputs_red_x, inputs_red_y, inputs_red_z = split_coordinates(inputs_red_positions)
+inputs_green_x, inputs_green_y, inputs_green_z = split_coordinates(inputs_green_positions)
+inputs_blue_x, inputs_blue_y, inputs_blue_z = split_coordinates(inputs_blue_positions)
+neurons_x, neurons_y, neurons_z = split_coordinates(neurons_positions)
+outputs_x, outputs_y, outputs_z = split_coordinates(outputs_positions)
+
 # Place rgb inputs
-scat_red_inputs = ax.scatter(rgb_x, rgb_y, red_z, c=red_init, s=15, edgecolors='none', cmap="Reds", alpha=0.9)
-scat_green_inputs = ax.scatter(rgb_x, rgb_y, green_z, c=green_init, s=15, edgecolors='none', cmap="Greens", alpha=0.9)
-scat_blue_inputs = ax.scatter(rgb_x, rgb_y, blue_z, c=blue_init, s=15, edgecolors='none', cmap="Blues", alpha=0.9)
+scat_red_inputs = ax.scatter(inputs_red_x, inputs_red_y, inputs_red_z, c=red_init, s=15,
+                             edgecolors='none', cmap="Reds", alpha=0.9)
+scat_green_inputs = ax.scatter(inputs_green_x, inputs_green_y, inputs_green_z, c=green_init, s=15,
+                               edgecolors='none', cmap="Greens", alpha=0.9)
+scat_blue_inputs = ax.scatter(inputs_blue_x, inputs_blue_y, inputs_blue_z, c=blue_init, s=15,
+                              edgecolors='none', cmap="Blues", alpha=0.9)
 
 # Place CTRNN neurons
 scat_neurons = ax.scatter(neurons_x, neurons_y, neurons_z, c="Black", s=15, edgecolors='none')
