@@ -14,7 +14,6 @@ def get_rgb_points(width, height, red_z, green_z, blue_z):
     space_y = np.linspace(0, 1, height)
 
     grid_x, grid_y = np.meshgrid(space_x, space_y)
-
     rgb_points_x = grid_x.flatten()
     rgb_points_y = grid_y.flatten()
 
@@ -44,11 +43,11 @@ def get_rgb_from_observation(ob):
 
     ob_scaled = ob/255.0
 
-    ob_red = ob_scaled[:, :, 0]
-    ob_green = ob_scaled[:, :, 1]
-    ob_blue = ob_scaled[:, :, 2]
+    ob_red = ob_scaled[:, :, 0].flatten()
+    ob_green = ob_scaled[:, :, 1].flatten()
+    ob_blue = ob_scaled[:, :, 2].flatten()
 
-    return ob_red.flatten(), ob_green.flatten(), ob_blue.flatten()
+    return np.concatenate((ob_red, ob_green, ob_blue))
 
 
 def split_coordinates(coordinates):
@@ -56,32 +55,36 @@ def split_coordinates(coordinates):
     return coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
 
 
-def update_plot(i):
+def update_plot(k):
 
     obs, rew, done, info = env.step(env.action_space.sample())
-    red, green, blue = get_rgb_from_observation(obs)
+    inputs = get_rgb_from_observation(obs)
+    red = inputs[0:image_size]
+    green = inputs[image_size:2 * image_size]
+    blue = inputs[2 * image_size:3 * image_size]
 
-    print(i)
+    print(k)
 
-    if i == 0:
+    if k == 0:
         global t_start
         t_start = time.time()
 
     if unified_inputs:
-        inputs = np.concatenate((red, green, blue))
         scat_inputs.set_array(inputs)
     else:
         scat_red_inputs.set_array(red)
         scat_green_inputs.set_array(green)
         scat_blue_inputs.set_array(blue)
 
-    if i == number_frames-1:
+    if k == number_frames-1:
         print((time.time() - t_start))
 
     return
 
 
 # Parameters
+environment = "procgen:procgen-heist-v0"
+memory_mode = True
 number_frames = 1000
 input_image_width = 64
 input_image_height = 64
@@ -94,16 +97,12 @@ outputs_z = -1
 record_video = False
 unified_inputs = False
 
-# Inputs from rgb meshgrids
+# Input positions
 image_size = input_image_width * input_image_height
 input_positions = get_rgb_points(input_image_width, input_image_height, red_z, green_z, blue_z)
 inputs_red_positions = input_positions[0:image_size, :]
 inputs_green_positions = input_positions[image_size:2 * image_size, :]
 inputs_blue_positions = input_positions[2 * image_size:3 * image_size, :]
-
-for i in input_positions:
-    print(i[0])
-    print("test")
 
 # CTRNN Neurons are randomly placed in a cube with length = 1
 neurons_positions = np.random.random((number_neurons, 3))
@@ -111,19 +110,19 @@ neurons_positions = np.random.random((number_neurons, 3))
 # Outputs as a circle
 outputs_positions = get_circle_points(number_outputs, outputs_z)
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+if memory_mode:
+    env = gym.make(environment, distribution_mode="memory")
+else:
+    env = gym.make(environment)
 
-#env = gym.make("procgen:procgen-chaser-v0", distribution_mode="memory")
-env = gym.make("procgen:procgen-heist-v0")
-
-# Procgen Env
+# Reset Procgen Env and get initial observation
 obs_init = env.reset()
-red_init, green_init, blue_init = get_rgb_from_observation(obs_init)
+inputs_init = get_rgb_from_observation(obs_init)
+red_init = inputs_init[0:image_size]
+green_init = inputs_init[image_size:2 * image_size]
+blue_init = inputs_init[2 * image_size:3 * image_size]
 
-test = obs_init.flatten()/255.0
-
-# Split all positions from 2D arrays to 1D vectors
+# Split all positions from 2D matrizes to 1D vectors (required for scatter function)
 inputs_x, inputs_y, inputs_z = split_coordinates(input_positions)
 inputs_red_x, inputs_red_y, inputs_red_z = split_coordinates(inputs_red_positions)
 inputs_green_x, inputs_green_y, inputs_green_z = split_coordinates(inputs_green_positions)
@@ -131,7 +130,10 @@ inputs_blue_x, inputs_blue_y, inputs_blue_z = split_coordinates(inputs_blue_posi
 neurons_x, neurons_y, neurons_z = split_coordinates(neurons_positions)
 outputs_x, outputs_y, outputs_z = split_coordinates(outputs_positions)
 
-# Place rgb inputs
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Place RGB inputs
 if unified_inputs:
     scat_inputs = ax.scatter(inputs_x, inputs_y, inputs_z, c=np.concatenate((red_init, green_init, blue_init)), s=15,
                              edgecolors='none', cmap="Greys", alpha=0.9)
