@@ -102,7 +102,7 @@ number_neurons: int = 5000
 number_outputs: int = 16
 outputs_radius: float = 0.45
 outputs_z: float = -1.0
-record_video: bool = False
+record_video: bool = True
 unified_inputs: bool = False
 
 
@@ -160,7 +160,7 @@ manager.window.showMaximized()
 if record_video:
     # Set up formatting for the movie files
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=30, metadata=dict(artist='Me'), bitrate=-1)
+    writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=-1)
 
     ani.save('hyperbrain.mp4', writer=writer)
 
