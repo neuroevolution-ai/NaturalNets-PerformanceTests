@@ -8,7 +8,7 @@ import matplotlib.animation as animation
 matplotlib.use('Qt5Agg')
 
 
-def get_rgb_points(width, height, position_z):
+def get_rgb_points(width, height, red_z, green_z, blue_z):
 
     space_x = np.linspace(0, 1, width)
     space_y = np.linspace(0, 1, height)
@@ -17,9 +17,12 @@ def get_rgb_points(width, height, position_z):
 
     rgb_points_x = grid_x.flatten()
     rgb_points_y = grid_y.flatten()
-    rgb_points_z = np.ones(width*height) * position_z
 
-    return np.column_stack((rgb_points_x, rgb_points_y, rgb_points_z))
+    positions_red = np.column_stack((rgb_points_x, rgb_points_y, np.ones(width*height) * red_z))
+    positions_green = np.column_stack((rgb_points_x, rgb_points_y, np.ones(width*height) * green_z))
+    positions_blue = np.column_stack((rgb_points_x, rgb_points_y, np.ones(width*height) * blue_z))
+
+    return np.vstack((positions_red, positions_green, positions_blue))
 
 
 def get_circle_points(n, position_z):
@@ -64,9 +67,13 @@ def update_plot(i):
         global t_start
         t_start = time.time()
 
-    scat_red_inputs.set_array(red)
-    scat_green_inputs.set_array(green)
-    scat_blue_inputs.set_array(blue)
+    if unified_inputs:
+        inputs = np.concatenate((red, green, blue))
+        scat_inputs.set_array(inputs)
+    else:
+        scat_red_inputs.set_array(red)
+        scat_green_inputs.set_array(green)
+        scat_blue_inputs.set_array(blue)
 
     if i == number_frames-1:
         print((time.time() - t_start))
@@ -81,15 +88,22 @@ input_image_height = 64
 red_z = 2
 green_z = 3
 blue_z = 4
-number_neurons = 2000
+number_neurons = 5000
 number_outputs = 16
 outputs_z = -1
 record_video = False
+unified_inputs = False
 
 # Inputs from rgb meshgrids
-inputs_red_positions = get_rgb_points(input_image_width, input_image_height, red_z)
-inputs_green_positions = get_rgb_points(input_image_width, input_image_height, green_z)
-inputs_blue_positions = get_rgb_points(input_image_width, input_image_height, blue_z)
+image_size = input_image_width * input_image_height
+input_positions = get_rgb_points(input_image_width, input_image_height, red_z, green_z, blue_z)
+inputs_red_positions = input_positions[0:image_size, :]
+inputs_green_positions = input_positions[image_size:2 * image_size, :]
+inputs_blue_positions = input_positions[2 * image_size:3 * image_size, :]
+
+for i in input_positions:
+    print(i[0])
+    print("test")
 
 # CTRNN Neurons are randomly placed in a cube with length = 1
 neurons_positions = np.random.random((number_neurons, 3))
@@ -100,13 +114,17 @@ outputs_positions = get_circle_points(number_outputs, outputs_z)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-env = gym.make("procgen:procgen-heist-v0", distribution_mode="memory")
+#env = gym.make("procgen:procgen-chaser-v0", distribution_mode="memory")
+env = gym.make("procgen:procgen-heist-v0")
 
 # Procgen Env
 obs_init = env.reset()
 red_init, green_init, blue_init = get_rgb_from_observation(obs_init)
 
+test = obs_init.flatten()/255.0
+
 # Split all positions from 2D arrays to 1D vectors
+inputs_x, inputs_y, inputs_z = split_coordinates(input_positions)
 inputs_red_x, inputs_red_y, inputs_red_z = split_coordinates(inputs_red_positions)
 inputs_green_x, inputs_green_y, inputs_green_z = split_coordinates(inputs_green_positions)
 inputs_blue_x, inputs_blue_y, inputs_blue_z = split_coordinates(inputs_blue_positions)
@@ -114,12 +132,16 @@ neurons_x, neurons_y, neurons_z = split_coordinates(neurons_positions)
 outputs_x, outputs_y, outputs_z = split_coordinates(outputs_positions)
 
 # Place rgb inputs
-scat_red_inputs = ax.scatter(inputs_red_x, inputs_red_y, inputs_red_z, c=red_init, s=15,
-                             edgecolors='none', cmap="Reds", alpha=0.9)
-scat_green_inputs = ax.scatter(inputs_green_x, inputs_green_y, inputs_green_z, c=green_init, s=15,
-                               edgecolors='none', cmap="Greens", alpha=0.9)
-scat_blue_inputs = ax.scatter(inputs_blue_x, inputs_blue_y, inputs_blue_z, c=blue_init, s=15,
-                              edgecolors='none', cmap="Blues", alpha=0.9)
+if unified_inputs:
+    scat_inputs = ax.scatter(inputs_x, inputs_y, inputs_z, c=np.concatenate((red_init, green_init, blue_init)), s=15,
+                             edgecolors='none', cmap="Greys", alpha=0.9)
+else:
+    scat_red_inputs = ax.scatter(inputs_red_x, inputs_red_y, inputs_red_z, c=red_init, s=15,
+                                 edgecolors='none', cmap="Reds", alpha=0.9)
+    scat_green_inputs = ax.scatter(inputs_green_x, inputs_green_y, inputs_green_z, c=green_init, s=15,
+                                   edgecolors='none', cmap="Greens", alpha=0.9)
+    scat_blue_inputs = ax.scatter(inputs_blue_x, inputs_blue_y, inputs_blue_z, c=blue_init, s=15,
+                                  edgecolors='none', cmap="Blues", alpha=0.9)
 
 # Place CTRNN neurons
 scat_neurons = ax.scatter(neurons_x, neurons_y, neurons_z, c="Black", s=15, edgecolors='none')
