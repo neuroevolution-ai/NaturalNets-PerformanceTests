@@ -3,6 +3,13 @@ from keras.layers.core import Dense
 import numpy as np
 import time
 
+number_neuron_connections = 3000000
+u = list()
+
+for i in range(112):
+    u.append(np.random.rand(number_neuron_connections, 6).astype(np.float32))
+
+
 def create_mlp():
 
     model = Sequential()
@@ -25,7 +32,7 @@ model = create_mlp()
 model.compile(loss="mean_squared_error")
 
 # train the model
-model.fit(trainX, trainY, validation_data=(testX, testY), epochs=500)
+model.fit(trainX, trainY, validation_data=(testX, testY), epochs=5)
 
 # make predictions on the testing data
 preds = model.predict(testX)
@@ -34,11 +41,22 @@ preds2 = preds[:,0]
 diff = preds2 - testY
 perc = 100 - (preds2/testY)*100
 
-z1 = np.random.rand(3000000, 6)
+#########
+
+# start = time.time()
+
+# z = model.predict(z1)
+
+# end = time.time()
+
+# print(end - start)
+
+#########
 
 start = time.time()
 
-z = model.predict(z1)
+for u_i in u:
+    z = model.predict_on_batch(u_i)
 
 end = time.time()
 
