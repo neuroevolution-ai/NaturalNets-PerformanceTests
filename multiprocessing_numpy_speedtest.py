@@ -1,9 +1,10 @@
 import time
 import os
 import multiprocessing
+import gym
 from multiprocessing.dummy import Pool as ThreadPool
 
-mode = "step_batch"
+mode = "step_episode_runner_full"
 set_numpy_variables = False
 test_gpu = False
 
@@ -62,7 +63,12 @@ def predict(u):
 
 
 def step(u):
-    x = np.random.rand(u.shape[0], number_neurons, 1).astype(np.float32)
+
+    if u.ndim == 3:
+        x = np.random.rand(u.shape[0], number_neurons, 1).astype(np.float32)
+    else:
+        x = np.random.rand(number_neurons).astype(np.float32)
+
     dx = np.matmul(W, x) + np.matmul(V, u)
     x += 0.05*dx
 
@@ -77,6 +83,21 @@ def run_episode(u):
     return o
 
 
+def run_episode_full(u):
+
+    env = gym.make('procgen:procgen-heist-v0')
+    obs = env.reset()
+    reward = 0
+
+    for _ in range(number_env_steps):
+        action = step(obs.flatten())
+        obs, rew, done, info = env.step(np.argmax(action))
+
+        reward += rew
+
+    return reward
+
+
 inputs = []
 
 if mode == "step_batch":
@@ -87,6 +108,12 @@ if mode == "step_batch":
 
 elif mode == "step_episode_runner":
     function_to_test = run_episode
+
+    for _ in range(population_size):
+        inputs.append(np.random.rand(1, number_inputs, 1).astype(np.float32))
+
+elif mode == "step_episode_runner_full":
+    function_to_test = run_episode_full
 
     for _ in range(population_size):
         inputs.append(np.random.rand(1, number_inputs, 1).astype(np.float32))
