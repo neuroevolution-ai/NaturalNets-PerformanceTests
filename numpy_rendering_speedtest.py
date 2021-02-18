@@ -39,11 +39,11 @@ for i in range(1000):
     #C = A
     C[0:200, 0:200] = A[200:400, 200:400]
 
-    #for i in range(15):
-    #    A[0:80, 0:80] = B
+    for i in range(50):
+        C[0:80, 0:80] = B
 
-    #for i in range(1):
-    #    A[mask] = 255
+    for i in range(50):
+        C[mask] = 255
 
     #C = A[n:n+64, n:n+64]
     #C[n:80+n, n:80+n] = B
