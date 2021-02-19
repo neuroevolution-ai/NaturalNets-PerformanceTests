@@ -1,9 +1,11 @@
-import time
-import gym
-from gym.vector import make as make_vec_env
 import multiprocessing
-import numpy as np
+import time
 
+import gym
+import gym3
+import numpy as np
+from gym.vector import make as make_vec_env
+from procgen import ProcgenGym3Env
 
 population_size = 112
 
@@ -29,7 +31,7 @@ def run_episode_vec_env(u):
 
     env = make_vec_env(id="procgen:procgen-heist-v0", num_envs=population_size, asynchronous=True)
     obs = env.reset()
-    rewards = np.zeros((population_size))
+    rewards = np.zeros(population_size)
     for _ in range(number_env_steps):
         action = env.action_space.sample()
         obs, rew, done, info = env.step(action)
@@ -38,23 +40,49 @@ def run_episode_vec_env(u):
 
     return rewards
 
-inputs = np.zeros((population_size))
 
-# Multiprocessing
-pool = multiprocessing.Pool()
+def run_episode_gym3_vec_env(u):
 
-t_start = time.time()
+    env = ProcgenGym3Env(num=population_size, env_name="heist")
+    rewards = np.zeros(population_size)
+    for _ in range(number_env_steps):
+        env.act(gym3.types_np.sample(env.ac_space, bshape=(env.num,)))
+        rew, obs, first = env.observe()
 
-result_mp = pool.map(run_episode_full, inputs)
+        rewards += rew
+    return rewards
 
-print("Multi-Processing map took: {:6.3f}s".format(time.time()-t_start))
 
-# Vectorized environment
+def main():
+    inputs = np.zeros(population_size)
 
-t_start = time.time()
+    # Multiprocessing
+    pool = multiprocessing.Pool()
 
-result_vec = run_episode_vec_env([])
+    t_start = time.time()
 
-print("Vectorized environment took: {:6.3f}s".format(time.time()-t_start))
+    result_mp = pool.map(run_episode_full, inputs)
 
-assert len(result_mp) == len(result_vec) and len(result_mp) == population_size
+    print("Multi-Processing map took: {:6.3f}s".format(time.time()-t_start))
+
+    # Vectorized environment
+    t_start = time.time()
+
+    result_vec = run_episode_vec_env([])
+
+    print("Vectorized environment took: {:6.3f}s".format(time.time()-t_start))
+
+    # Gym3 Vectorized environment
+    t_start = time.time()
+
+    result_gym3_vec = run_episode_gym3_vec_env([])
+
+    print("Gym3 vec environment took: {:6.3f}s".format(time.time()-t_start))
+
+    assert (len(result_mp) == len(result_vec)
+            and len(result_mp) == len(result_gym3_vec)
+            and  len(result_mp) == population_size)
+
+
+if __name__ == "__main__":
+    main()

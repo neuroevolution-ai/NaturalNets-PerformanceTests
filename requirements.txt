@@ -2,3 +2,6 @@ numpy
 keras
 matplotlib
 tensorflow
+gym
+procgen
+gym3
