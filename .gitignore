@@ -3,15 +3,43 @@ __pycache__/
 .idea/
 .pytest_cache/
 .mypy_cache/
+venv/
+.ipynb_checkpoints/
 
 configurations/default.json
+configurations/temp.json
+configurations/Configuration.json
+configurations/local_*
 
 checkpoints
 /results/
 /results/*
 results
 /results/data/2020-05-29_12-00-33/Configuration.json
+videos
+
+temp*.py
+test.py
+nohup.out
+checkpoint*.pkl
 
 .dmypy.json
 .lock
 dask-worker-space/
+/MUJOCO_LOG.TXT
+
+*.latex
+*.tex
+/configurations/exp_design_space.json
+mprofile_*.dat
+
+# Simulation Plots
+Simulation_Results/*/*.svg
+
+# Whitelist files with 'test' in their name but only in tests/ folder
+!tests/test*.py
+
+# CSV for displaying results
+*.csv
+.~lock*.csv#
+spreadsheets/
