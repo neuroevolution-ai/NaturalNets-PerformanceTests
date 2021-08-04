@@ -4,7 +4,7 @@ import multiprocessing
 import gym
 from multiprocessing.dummy import Pool as ThreadPool
 
-mode = "step_episode_runner_full"
+mode = "step_episode_runner_matmul"
 set_numpy_variables = False
 test_gpu = False
 
@@ -20,14 +20,15 @@ if test_gpu:
 else:
     import numpy as np
 
-number_inputs = 64*64*3
+# number_inputs = 64*64*3
+number_inputs = 200
 number_neurons = 200
 number_outputs = 16
 
 number_neuron_connections = 3000000
 population_size = 112
 
-number_env_steps = 1000
+number_env_steps = 2000
 
 
 # Weight Matrizes
@@ -83,6 +84,14 @@ def run_episode(u):
     return o
 
 
+def run_episode_matmul(u):
+
+    for _ in range(number_env_steps):
+        o = np.matmul(V, u)
+
+    return o
+
+
 def run_episode_full(u):
 
     env = gym.make('procgen:procgen-heist-v0')
@@ -108,6 +117,12 @@ if mode == "step_batch":
 
 elif mode == "step_episode_runner":
     function_to_test = run_episode
+
+    for _ in range(population_size):
+        inputs.append(np.random.rand(1, number_inputs, 1).astype(np.float32))
+
+elif mode == "step_episode_runner_matmul":
+    function_to_test = run_episode_matmul
 
     for _ in range(population_size):
         inputs.append(np.random.rand(1, number_inputs, 1).astype(np.float32))
