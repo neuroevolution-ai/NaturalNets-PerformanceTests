@@ -58,10 +58,13 @@ A_d = cuda.to_device(A)
 B_d = cuda.to_device(B)
 C_d = cuda.to_device(C)
 
-matmul_fast[112, m](A_d, B_d, C_d)
+for i in range(100):
+    matmul_fast[112, m](A_d, B_d, C_d)
+    cuda.synchronize()
 
 C_r = C_d.copy_to_host()
 
-print(np.matmul(A,B) - C_r)
+#print(np.matmul(A,B) - C_r)
 
 cuda.profile_stop()
+cuda.close()
