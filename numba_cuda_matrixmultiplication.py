@@ -60,6 +60,7 @@ C_d = cuda.to_device(C)
 
 for i in range(100):
     matmul_fast[112, m](A_d, B_d, C_d)
+    #matmul[112, m](A_d, B_d, C_d)
     cuda.synchronize()
 
 C_r = C_d.copy_to_host()
